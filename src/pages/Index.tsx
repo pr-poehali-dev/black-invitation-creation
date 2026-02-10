@@ -112,17 +112,22 @@ const Index = () => {
             </Card>
 
             <Card className="bg-black border-white/20 p-8 hover:border-white/40 transition-colors">
-              <div className="flex items-start gap-4">
-                <Icon name="MapPin" size={32} className="text-white/60" />
+              <a 
+                href="https://yandex.ru/maps/-/CPQZnSN1" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-start gap-4 group"
+              >
+                <Icon name="MapPin" size={32} className="text-white/60 group-hover:text-white transition-colors" />
                 <div>
                   <h3 className="font-montserrat text-xs uppercase tracking-widest text-white/60 mb-3">
                     Где
                   </h3>
-                  <p className="font-cormorant text-3xl font-light">
+                  <p className="font-cormorant text-3xl font-light group-hover:text-white/90 transition-colors">
                     Загородный очаг
                   </p>
                 </div>
-              </div>
+              </a>
             </Card>
           </div>
 
