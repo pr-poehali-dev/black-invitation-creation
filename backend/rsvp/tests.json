@@ -1,0 +1,41 @@
+{
+  "tests": [
+    {
+      "name": "POST - Save guest RSVP",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "name": "Мария",
+        "will_attend": true
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "POST - Missing name validation",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "will_attend": true
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "GET - List all guests",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "guests": []
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

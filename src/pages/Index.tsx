@@ -2,10 +2,17 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 
 const Index = () => {
   const [rsvp, setRsvp] = useState<'yes' | 'no' | null>(null);
+  const [guestName, setGuestName] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNameInput, setShowNameInput] = useState(false);
+  const [selectedResponse, setSelectedResponse] = useState<'yes' | 'no' | null>(null);
+  const { toast } = useToast();
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -36,8 +43,53 @@ const Index = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleRSVP = (response: 'yes' | 'no') => {
-    setRsvp(response);
+  const handleRSVPClick = (response: 'yes' | 'no') => {
+    setSelectedResponse(response);
+    setShowNameInput(true);
+  };
+
+  const submitRSVP = async () => {
+    if (!guestName.trim()) {
+      toast({
+        title: 'Укажите имя',
+        description: 'Пожалуйста, введите ваше имя',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('https://functions.poehali.dev/276bf635-e547-480d-bcfd-e6b0c924a828', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: guestName,
+          will_attend: selectedResponse === 'yes'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Ошибка отправки');
+      }
+
+      setRsvp(selectedResponse);
+      toast({
+        title: 'Спасибо!',
+        description: 'Ваш ответ отправлен Алёне'
+      });
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось отправить ответ. Попробуйте ещё раз.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -182,21 +234,55 @@ const Index = () => {
           </div>
 
           {rsvp === null ? (
-            <div className="flex flex-col gap-4">
-              <Button
-                onClick={() => handleRSVP('yes')}
-                className="h-14 bg-white text-black hover:bg-white/90 font-montserrat text-sm tracking-widest uppercase transition-all"
-              >
-                Буду
-              </Button>
-              <Button
-                onClick={() => handleRSVP('no')}
-                variant="outline"
-                className="h-14 border-white/20 text-white hover:bg-white/10 font-montserrat text-sm tracking-widest uppercase transition-all"
-              >
-                Не буду
-              </Button>
-            </div>
+            showNameInput ? (
+              <div className="space-y-4 animate-scale-in">
+                <Input
+                  type="text"
+                  placeholder="Ваше имя"
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  className="h-14 bg-black border-white/20 text-white placeholder:text-white/40 font-montserrat text-center"
+                  disabled={isSubmitting}
+                />
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => {
+                      setShowNameInput(false);
+                      setSelectedResponse(null);
+                      setGuestName('');
+                    }}
+                    variant="outline"
+                    className="flex-1 h-12 border-white/20 text-white hover:bg-white/10 font-montserrat text-xs tracking-widest uppercase"
+                    disabled={isSubmitting}
+                  >
+                    Назад
+                  </Button>
+                  <Button
+                    onClick={submitRSVP}
+                    className="flex-1 h-12 bg-white text-black hover:bg-white/90 font-montserrat text-xs tracking-widest uppercase"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Отправка...' : 'Отправить'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <Button
+                  onClick={() => handleRSVPClick('yes')}
+                  className="h-14 bg-white text-black hover:bg-white/90 font-montserrat text-sm tracking-widest uppercase transition-all"
+                >
+                  Буду
+                </Button>
+                <Button
+                  onClick={() => handleRSVPClick('no')}
+                  variant="outline"
+                  className="h-14 border-white/20 text-white hover:bg-white/10 font-montserrat text-sm tracking-widest uppercase transition-all"
+                >
+                  Не буду
+                </Button>
+              </div>
+            )
           ) : (
             <Card className="bg-black border-white/20 p-8 animate-scale-in">
               <div className="flex items-center gap-3 justify-center mb-4">
@@ -210,7 +296,12 @@ const Index = () => {
                 {rsvp === 'yes' ? 'Прекрасно! До встречи!' : 'Жаль, что не увидимся'}
               </p>
               <Button
-                onClick={() => setRsvp(null)}
+                onClick={() => {
+                  setRsvp(null);
+                  setShowNameInput(false);
+                  setSelectedResponse(null);
+                  setGuestName('');
+                }}
                 variant="ghost"
                 className="mt-6 text-white/60 hover:text-white font-montserrat text-xs tracking-widest uppercase"
               >
